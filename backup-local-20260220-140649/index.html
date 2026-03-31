@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VoltTrack - Smart Electricity Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              volt: {
+                50: '#ecfeff',
+                100: '#cffafe',
+                200: '#a5f3fc',
+                300: '#67e8f9',
+                400: '#22d3ee',
+                500: '#00d4ff',
+                600: '#00a8cc',
+                700: '#0284c7',
+                800: '#0c4a6e',
+                900: '#083344',
+              },
+              surface: {
+                900: '#030712',
+                800: '#0a0f1a',
+                700: '#111827',
+                600: '#1f2937',
+                500: '#374151',
+              },
+              energy: {
+                400: '#fbbf24',
+                500: '#f59e0b',
+                600: '#d97706',
+              }
+            },
+            fontFamily: {
+              display: ['Outfit', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'Consolas', 'monospace'],
+            },
+            boxShadow: {
+              'glow-cyan': '0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.1)',
+              'glow-amber': '0 0 20px rgba(251, 191, 36, 0.3), 0 0 40px rgba(251, 191, 36, 0.1)',
+              'glow-emerald': '0 0 20px rgba(16, 185, 129, 0.3)',
+              'inner-glow': 'inset 0 1px 0 0 rgba(255,255,255,0.05)',
+            },
+            backgroundImage: {
+              'grid-pattern': 'linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px)',
+              'gradient-radial': 'radial-gradient(ellipse at center, var(--tw-gradient-stops))',
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'glow': 'glow 2s ease-in-out infinite alternate',
+              'slide-up': 'slideUp 0.4s ease-out',
+              'fade-in': 'fadeIn 0.3s ease-out',
+              'meter-pulse': 'meterPulse 2s ease-in-out infinite',
+            },
+            keyframes: {
+              glow: {
+                '0%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.2)' },
+                '100%': { boxShadow: '0 0 30px rgba(0, 212, 255, 0.4), 0 0 60px rgba(0, 212, 255, 0.1)' },
+              },
+              slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              meterPulse: {
+                '0%, 100%': { opacity: '1' },
+                '50%': { opacity: '0.8' },
+              },
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      * { font-family: 'Outfit', system-ui, sans-serif; }
+      .font-mono, code, .meter-display { font-family: 'JetBrains Mono', Consolas, monospace; }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #111827; }
+      ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+      /* Glass effect */
+      .glass {
+        background: rgba(17, 24, 39, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Glow text effect */
+      .text-glow-cyan {
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.5), 0 0 20px rgba(0, 212, 255, 0.3);
+      }
+      .text-glow-amber {
+        text-shadow: 0 0 10px rgba(251, 191, 36, 0.5), 0 0 20px rgba(251, 191, 36, 0.3);
+      }
+
+      /* Meter display styling */
+      .meter-segment {
+        background: linear-gradient(180deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+      }
+
+      /* Card hover effect */
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(0, 212, 255, 0.15);
+      }
+
+      /* Noise texture overlay */
+      .noise::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.02;
+        pointer-events: none;
+      }
+
+      /* Grid background */
+      .bg-grid {
+        background-size: 40px 40px;
+        background-image:
+          linear-gradient(to right, rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+      }
+
+      /* Safe area for mobile */
+      .safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+      /* Animation delays for staggered effects */
+      .delay-100 { animation-delay: 100ms; }
+      .delay-200 { animation-delay: 200ms; }
+      .delay-300 { animation-delay: 300ms; }
+      .delay-400 { animation-delay: 400ms; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-surface-900 text-gray-100 antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
